@@ -1,15 +1,37 @@
 import User, { IUser } from "../models/User";
+import RefreshToken from "../models/RefreshToken";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
+import crypto from "crypto";
 
 interface AuthResponse {
-  token: string;
+  accessToken: string;
+  refreshToken: string;
   user: {
     id: string;
     username: string;
     email: string;
   };
 }
+
+const generateTokens = async (user: IUser) => {
+  const payload = { user: { id: user.id } };
+  const accessToken = jwt.sign(payload, process.env.JWT_SECRET || "secret", {
+    expiresIn: "15m",
+  });
+
+  const refreshToken = crypto.randomBytes(40).toString("hex");
+  const expiresAt = new Date();
+  expiresAt.setDate(expiresAt.getDate() + 7); // 7 days
+
+  await new RefreshToken({
+    token: refreshToken,
+    user: user.id,
+    expiresAt,
+  }).save();
+
+  return { accessToken, refreshToken };
+};
 
 export const registerUser = async (userData: any): Promise<AuthResponse> => {
   const { username, email, password } = userData;
@@ -30,13 +52,10 @@ export const registerUser = async (userData: any): Promise<AuthResponse> => {
 
   await user.save();
 
-  const payload = { user: { id: user.id } };
-  const token = jwt.sign(payload, process.env.JWT_SECRET || "secret", {
-    expiresIn: "1h",
-  });
+  const tokens = await generateTokens(user);
 
   return {
-    token,
+    ...tokens,
     user: { id: user.id, username: user.username, email: user.email },
   };
 };
@@ -55,13 +74,31 @@ export const loginUser = async (
     throw new Error("Invalid Credentials");
   }
 
-  const payload = { user: { id: user.id } };
-  const token = jwt.sign(payload, process.env.JWT_SECRET || "secret", {
-    expiresIn: "1h",
-  });
+  const tokens = await generateTokens(user);
 
   return {
-    token,
+    ...tokens,
     user: { id: user.id, username: user.username, email: user.email },
   };
+};
+
+export const refreshToken = async (token: string): Promise<string> => {
+  const refreshTokenDoc = await RefreshToken.findOne({ token }).populate(
+    "user"
+  );
+
+  if (!refreshTokenDoc || refreshTokenDoc.expiresAt < new Date()) {
+    throw new Error("Invalid or expired refresh token");
+  }
+
+  const user = refreshTokenDoc.user as unknown as IUser;
+  const payload = { user: { id: user.id } };
+
+  return jwt.sign(payload, process.env.JWT_SECRET || "secret", {
+    expiresIn: "15m",
+  });
+};
+
+export const logoutUser = async (token: string) => {
+  await RefreshToken.findOneAndDelete({ token });
 };

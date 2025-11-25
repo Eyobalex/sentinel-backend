@@ -28,7 +28,7 @@ export interface IAlert extends Document {
   ipReputation?: IIpReputation;
   aiAnalysis: IAiAnalysis;
   isRead: boolean;
-  isResolved: boolean;
+  status: "pending" | "resolved" | "unresolvable";
 }
 
 const alertSchema: Schema = new Schema({
@@ -41,7 +41,11 @@ const alertSchema: Schema = new Schema({
     recommended_action: { type: String },
   },
   isRead: { type: Boolean, default: false },
-  isResolved: { type: Boolean, default: false },
+  status: {
+    type: String,
+    enum: ["pending", "resolved", "unresolvable"],
+    default: "pending",
+  },
 });
 
 export default mongoose.model<IAlert>("Alert", alertSchema);

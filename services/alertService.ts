@@ -243,6 +243,22 @@ export const createAlert = async (data: any): Promise<IAlert> => {
 };
 
 export const updateAlert = async (id: string, data: any): Promise<IAlert> => {
+  const alert = await Alert.findById(id);
+  if (!alert) throw new Error("Alert not found");
+
+  if (data.status) {
+    if (alert.status !== "pending") {
+      throw new Error(
+        `Cannot change status from ${alert.status} to ${data.status}. Only pending alerts can be modified.`
+      );
+    }
+    if (!["resolved", "unresolvable"].includes(data.status)) {
+      throw new Error(
+        "Invalid status transition. Pending alerts can only be moved to 'resolved' or 'unresolvable'."
+      );
+    }
+  }
+
   const updatedAlert = await Alert.findByIdAndUpdate(id, data, { new: true });
   if (!updatedAlert) throw new Error("Alert not found");
   return updatedAlert;

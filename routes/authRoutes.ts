@@ -13,4 +13,14 @@ router.post("/register", authController.register);
 // @access  Public
 router.post("/login", authController.login);
 
+// @route   POST api/auth/refresh
+// @desc    Refresh access token
+// @access  Public
+router.post("/refresh", authController.refresh);
+
+// @route   POST api/auth/logout
+// @desc    Logout user (revoke refresh token)
+// @access  Public
+router.post("/logout", authController.logout);
+
 export default router;
