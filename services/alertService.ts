@@ -146,6 +146,7 @@ export const performAudit = async (): Promise<IAlert> => {
     rawLog: log,
     ipReputation: reputation,
     aiAnalysis: analysis,
+    assigned: analysis.severity === "Low" ? "no_need" : "not_assigned",
   });
   await newAlert.save();
 
@@ -254,9 +255,9 @@ export const updateAlert = async (id: string, data: any): Promise<IAlert> => {
   if (!alert) throw new Error("Alert not found");
 
   if (data.assigned) {
-    if (!["tier_2", "tier_3"].includes(data.assigned)) {
+    if (!["tier_2", "tier_3", "no_need"].includes(data.assigned)) {
       throw new Error(
-        "Invalid assignment. Can only assign to tier_2 or tier_3."
+        "Invalid assignment. Can only assign to tier_2, tier_3, or no_need."
       );
     }
   }

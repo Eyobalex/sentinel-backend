@@ -28,7 +28,7 @@ export interface IAlert extends Document {
   ipReputation?: IIpReputation;
   aiAnalysis: IAiAnalysis;
   isRead: boolean;
-  assigned: "not_assigned" | "tier_2" | "tier_3";
+  assigned: "not_assigned" | "tier_2" | "tier_3" | "no_need";
 }
 
 const alertSchema: Schema = new Schema({
@@ -43,7 +43,7 @@ const alertSchema: Schema = new Schema({
   isRead: { type: Boolean, default: false },
   assigned: {
     type: String,
-    enum: ["not_assigned", "tier_2", "tier_3"],
+    enum: ["not_assigned", "tier_2", "tier_3", "no_need"],
     default: "not_assigned",
   },
 });
