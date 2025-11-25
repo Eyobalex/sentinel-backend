@@ -1,0 +1,110 @@
+@baseUrl = http://localhost:8080/api
+@contentType = application/json
+
+### -----------------------
+### AUTHENTICATION
+### -----------------------
+
+### Register a new user
+# @name register
+POST {{baseUrl}}/auth/register
+Content-Type: {{contentType}}
+
+{
+    "username": "testadmin",
+    "email": "admin@sentinel.ai",
+    "password": "securepassword123"
+}
+
+### Login
+# @name login
+POST {{baseUrl}}/auth/login
+Content-Type: {{contentType}}
+
+{
+    "email": "admin@sentinel.ai",
+    "password": "securepassword123"
+}
+
+### Capture Token
+@authToken = {{login.response.body.token}}
+
+### -----------------------
+### ALERTS
+### -----------------------
+
+### Run Live Audit (Public)
+POST {{baseUrl}}/alerts/audit
+Content-Type: {{contentType}}
+
+### Get Latest Alerts (Public)
+GET {{baseUrl}}/alerts/latest
+Content-Type: {{contentType}}
+
+### Get Alert History (Paginated)
+GET {{baseUrl}}/alerts/history?page=1&limit=5
+Content-Type: {{contentType}}
+
+### Create Manual Alert (Protected)
+# @name createAlert
+POST {{baseUrl}}/alerts
+Content-Type: {{contentType}}
+Authorization: {{authToken}}
+
+{
+    "rawLog": {
+        "type": "MANUAL",
+        "message": "Manual security test",
+        "ip": "127.0.0.1"
+    },
+    "aiAnalysis": {
+        "severity": "Low",
+        "summary": "Manual test entry",
+        "recommended_action": "None"
+    }
+}
+
+@alertId = {{createAlert.response.body._id}}
+
+### Update Alert (Protected)
+PUT {{baseUrl}}/alerts/{{alertId}}
+Content-Type: {{contentType}}
+Authorization: {{authToken}}
+
+{
+    "isRead": true,
+    "isResolved": true
+}
+
+### Delete Alert (Protected)
+DELETE {{baseUrl}}/alerts/{{alertId}}
+Content-Type: {{contentType}}
+Authorization: {{authToken}}
+
+### -----------------------
+### USERS (Protected)
+### -----------------------
+
+### Get All Users
+GET {{baseUrl}}/users
+Content-Type: {{contentType}}
+Authorization: {{authToken}}
+
+### Create New User
+# @name createUser
+POST {{baseUrl}}/users
+Content-Type: {{contentType}}
+Authorization: {{authToken}}
+
+{
+    "username": "operator",
+    "email": "operator@sentinel.ai",
+    "password": "operatorpass"
+}
+
+@userId = {{createUser.response.body._id}}
+
+### Delete User
+DELETE {{baseUrl}}/users/{{userId}}
+Content-Type: {{contentType}}
+Authorization: {{authToken}}
