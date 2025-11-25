@@ -14,7 +14,13 @@ const app: Application = express();
 
 // Middleware
 app.use(express.json());
-app.use(cors());
+app.use(
+  cors({
+    origin: "*", // Allow ALL requests (easiest for testing)
+    methods: ["GET", "POST", "PUT", "DELETE"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+  })
+);
 
 // --- Configuration ---
 const PORT = process.env.PORT || 8080;

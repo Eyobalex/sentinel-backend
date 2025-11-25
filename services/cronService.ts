@@ -6,7 +6,7 @@ export const initCronJobs = () => {
   console.log("Initializing Cron Jobs...");
 
   // Schedule Batch Audit every 3 hours
-  cron.schedule("0 */3 * * *", async () => {
+  cron.schedule("0 * * * *", async () => {
     console.log("Running Scheduled Batch Audit...");
     try {
       await performBatchAudit(5);
