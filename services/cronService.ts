@@ -1,7 +1,7 @@
-const cron = require("node-cron");
-const alertService = require("./alertService");
+import cron from "node-cron";
+import * as alertService from "./alertService";
 
-exports.initCronJobs = () => {
+export const initCronJobs = () => {
   console.log("Initializing Cron Jobs...");
 
   // Schedule batch audit every 3 hours

@@ -1,7 +1,8 @@
-const express = require("express");
+import express from "express";
+import * as alertController from "../controllers/alertController";
+import auth from "../middleware/authMiddleware";
+
 const router = express.Router();
-const alertController = require("../controllers/alertController");
-const auth = require("../middleware/authMiddleware");
 
 // @route   POST api/alerts/audit
 // @desc    Run a live security audit
@@ -38,4 +39,4 @@ router.put("/:id", auth, alertController.updateAlert);
 // @access  Protected
 router.delete("/:id", auth, alertController.deleteAlert);
 
-module.exports = router;
+export default router;

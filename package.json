@@ -4,7 +4,9 @@
   "description": "Tier 1 Security Analyst Agent",
   "main": "index.js",
   "scripts": {
-    "start": "node index.js"
+    "start": "ts-node -r dotenv/config index.ts",
+    "dev": "ts-node -r dotenv/config index.ts",
+    "build": "tsc"
   },
   "dependencies": {
     "@google/generative-ai": "^0.1.3",
@@ -20,5 +22,15 @@
   },
   "engines": {
     "node": ">=18.0.0"
+  },
+  "devDependencies": {
+    "@types/bcryptjs": "^2.4.6",
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.5",
+    "@types/jsonwebtoken": "^9.0.10",
+    "@types/node": "^24.10.1",
+    "@types/node-cron": "^3.0.11",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.9.3"
   }
 }

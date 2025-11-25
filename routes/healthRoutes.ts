@@ -1,11 +1,12 @@
-const express = require("express");
+import express, { Request, Response } from "express";
+
 const router = express.Router();
 
 // @route   GET api/health
 // @desc    Check system status
 // @access  Public
-router.get("/", (req, res) => {
+router.get("/", (req: Request, res: Response) => {
   res.status(200).json({ status: "OK", timestamp: new Date() });
 });
 
-module.exports = router;
+export default router;

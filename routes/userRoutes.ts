@@ -1,7 +1,8 @@
-const express = require("express");
+import express from "express";
+import * as userController from "../controllers/userController";
+import auth from "../middleware/authMiddleware";
+
 const router = express.Router();
-const userController = require("../controllers/userController");
-const auth = require("../middleware/authMiddleware");
 
 // @route   GET api/users
 // @desc    Get all users
@@ -18,4 +19,4 @@ router.post("/", auth, userController.createUser);
 // @access  Protected
 router.delete("/:id", auth, userController.deleteUser);
 
-module.exports = router;
+export default router;

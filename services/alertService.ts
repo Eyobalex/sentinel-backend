@@ -1,15 +1,20 @@
-const Alert = require("../models/Alert");
-const axios = require("axios");
-const { GoogleGenerativeAI } = require("@google/generative-ai");
-const { Resend } = require("resend");
+import Alert, {
+  IAlert,
+  IRawLog,
+  IIpReputation,
+  IAiAnalysis,
+} from "../models/Alert";
+import axios from "axios";
+import { GoogleGenerativeAI } from "@google/generative-ai";
+import { Resend } from "resend";
 
 // Initialize Clients
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
 const resend = new Resend(process.env.RESEND_API_KEY);
 
 // --- Helper Functions ---
 
-function fetchMockLogs() {
+function fetchMockLogs(): IRawLog {
   const logTypes = [
     {
       type: "INFO",
@@ -50,7 +55,7 @@ function fetchMockLogs() {
   return logTypes[Math.floor(Math.random() * logTypes.length)];
 }
 
-async function checkIpReputation(ip) {
+async function checkIpReputation(ip: string): Promise<IIpReputation> {
   if (ip.startsWith("192.168.") || ip.startsWith("10.") || ip === "127.0.0.1") {
     return { isPublic: false, abuseConfidenceScore: 0, reports: 0 };
   }
@@ -63,13 +68,16 @@ async function checkIpReputation(ip) {
       },
     });
     return { isPublic: true, ...response.data.data };
-  } catch (error) {
+  } catch (error: any) {
     console.error("AbuseIPDB Error:", error.message);
-    return { error: "Failed to check IP reputation" };
+    return { isPublic: false, error: "Failed to check IP reputation" };
   }
 }
 
-async function analyzeWithGemini(log, reputation) {
+async function analyzeWithGemini(
+  log: IRawLog,
+  reputation: IIpReputation
+): Promise<IAiAnalysis> {
   try {
     const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
     const prompt = `
@@ -102,11 +110,11 @@ async function analyzeWithGemini(log, reputation) {
   }
 }
 
-async function sendEmailAlert(alertData) {
+async function sendEmailAlert(alertData: IAlert) {
   try {
     const { data, error } = await resend.emails.send({
-      from: process.env.ALERT_EMAIL_FROM,
-      to: [process.env.ALERT_EMAIL_TO],
+      from: process.env.ALERT_EMAIL_FROM || "",
+      to: [process.env.ALERT_EMAIL_TO || ""],
       subject: `[Sentinel] High Severity Threat Detected: ${alertData.aiAnalysis.summary}`,
       html: `
         <h1>High Severity Threat Detected!</h1>
@@ -120,7 +128,7 @@ async function sendEmailAlert(alertData) {
       `,
     });
     if (error) console.error("Resend Error:", error);
-    else console.log("Alert email sent successfully. ID:", data.id);
+    else console.log("Alert email sent successfully. ID:", data?.id);
   } catch (error) {
     console.error("Resend Exception:", error);
   }
@@ -128,7 +136,7 @@ async function sendEmailAlert(alertData) {
 
 // --- Service Methods ---
 
-exports.performAudit = async () => {
+export const performAudit = async (): Promise<IAlert> => {
   console.log("Starting single audit...");
   const log = fetchMockLogs();
   const reputation = await checkIpReputation(log.ip);
@@ -147,25 +155,42 @@ exports.performAudit = async () => {
   return newAlert;
 };
 
-exports.performBatchAudit = async (count = 5) => {
+export const performBatchAudit = async (
+  count: number = 5
+): Promise<IAlert[]> => {
   console.log(`Starting batch audit of ${count} logs...`);
-  const results = [];
+  const results: IAlert[] = [];
   for (let i = 0; i < count; i++) {
-    // Add small delay to avoid rate limits if necessary, or run in parallel
-    // Running sequentially to be safe with API limits for now
-    const alert = await exports.performAudit();
+    const alert = await performAudit();
     results.push(alert);
   }
   return results;
 };
 
-exports.getLatestAlerts = async () => {
+export const getLatestAlerts = async (): Promise<IAlert[]> => {
   return await Alert.find().sort({ timestamp: -1 }).limit(10);
 };
 
-exports.getAlertHistory = async (page, limit, filters) => {
+interface AlertFilters {
+  severity?: string;
+  startDate?: string;
+  endDate?: string;
+}
+
+interface AlertHistoryResponse {
+  alerts: IAlert[];
+  currentPage: number;
+  totalPages: number;
+  totalAlerts: number;
+}
+
+export const getAlertHistory = async (
+  page: number,
+  limit: number,
+  filters: AlertFilters
+): Promise<AlertHistoryResponse> => {
   const skip = (page - 1) * limit;
-  const query = {};
+  const query: any = {};
 
   if (filters.severity) {
     query["aiAnalysis.severity"] = filters.severity;
@@ -191,7 +216,7 @@ exports.getAlertHistory = async (page, limit, filters) => {
   };
 };
 
-exports.getAlertStats = async () => {
+export const getAlertStats = async (): Promise<{ [key: string]: number }> => {
   const stats = await Alert.aggregate([
     {
       $group: {
@@ -201,7 +226,7 @@ exports.getAlertStats = async () => {
     },
   ]);
 
-  const result = { High: 0, Medium: 0, Low: 0 };
+  const result: { [key: string]: number } = { High: 0, Medium: 0, Low: 0 };
   stats.forEach((s) => {
     if (result[s._id] !== undefined) {
       result[s._id] = s.count;
@@ -211,19 +236,19 @@ exports.getAlertStats = async () => {
   return result;
 };
 
-exports.createAlert = async (data) => {
+export const createAlert = async (data: any): Promise<IAlert> => {
   const newAlert = new Alert(data);
   await newAlert.save();
   return newAlert;
 };
 
-exports.updateAlert = async (id, data) => {
+export const updateAlert = async (id: string, data: any): Promise<IAlert> => {
   const updatedAlert = await Alert.findByIdAndUpdate(id, data, { new: true });
   if (!updatedAlert) throw new Error("Alert not found");
   return updatedAlert;
 };
 
-exports.deleteAlert = async (id) => {
+export const deleteAlert = async (id: string): Promise<IAlert> => {
   const alert = await Alert.findByIdAndDelete(id);
   if (!alert) throw new Error("Alert not found");
   return alert;

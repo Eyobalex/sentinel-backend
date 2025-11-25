@@ -1,8 +1,17 @@
-const User = require("../models/User");
-const bcrypt = require("bcryptjs");
-const jwt = require("jsonwebtoken");
+import User, { IUser } from "../models/User";
+import bcrypt from "bcryptjs";
+import jwt from "jsonwebtoken";
 
-exports.registerUser = async (userData) => {
+interface AuthResponse {
+  token: string;
+  user: {
+    id: string;
+    username: string;
+    email: string;
+  };
+}
+
+export const registerUser = async (userData: any): Promise<AuthResponse> => {
   const { username, email, password } = userData;
 
   let user = await User.findOne({ email });
@@ -32,7 +41,10 @@ exports.registerUser = async (userData) => {
   };
 };
 
-exports.loginUser = async (email, password) => {
+export const loginUser = async (
+  email: string,
+  password: string
+): Promise<AuthResponse> => {
   let user = await User.findOne({ email });
   if (!user) {
     throw new Error("Invalid Credentials");

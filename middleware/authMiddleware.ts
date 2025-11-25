@@ -1,6 +1,11 @@
-const jwt = require("jsonwebtoken");
+import { Request, Response, NextFunction } from "express";
+import jwt from "jsonwebtoken";
 
-module.exports = function (req, res, next) {
+interface AuthRequest extends Request {
+  user?: any;
+}
+
+export default function (req: AuthRequest, res: Response, next: NextFunction) {
   // Get token from header
   const token = req.header("Authorization");
 
@@ -11,10 +16,10 @@ module.exports = function (req, res, next) {
 
   // Verify token
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || "secret");
+    const decoded: any = jwt.verify(token, process.env.JWT_SECRET || "secret");
     req.user = decoded.user;
     next();
   } catch (err) {
     res.status(401).json({ message: "Token is not valid" });
   }
-};
+}

@@ -1,19 +1,11 @@
-const Alert = require("../models/Alert");
-const axios = require("axios");
-const { GoogleGenerativeAI } = require("@google/generative-ai");
-const { Resend } = require("resend");
-const alertService = require("../services/alertService");
+import { Request, Response } from "express";
+import * as alertService from "../services/alertService";
 
-// Initialize Clients
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-const resend = new Resend(process.env.RESEND_API_KEY);
-
-// Controller Methods
-exports.runAudit = async (req, res) => {
+export const runAudit = async (req: Request, res: Response) => {
   try {
     const newAlert = await alertService.performAudit();
     res.status(200).json({ message: "Audit complete", data: newAlert });
-  } catch (error) {
+  } catch (error: any) {
     console.error("Audit failed:", error);
     res
       .status(500)
@@ -21,68 +13,68 @@ exports.runAudit = async (req, res) => {
   }
 };
 
-exports.getLatestAlerts = async (req, res) => {
+export const getLatestAlerts = async (req: Request, res: Response) => {
   try {
     const alerts = await alertService.getLatestAlerts();
     res.json(alerts);
-  } catch (err) {
+  } catch (err: any) {
     res.status(500).json({ message: err.message });
   }
 };
 
-exports.getAlertHistory = async (req, res) => {
+export const getAlertHistory = async (req: Request, res: Response) => {
   try {
-    const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 10;
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 10;
 
     const filters = {
-      severity: req.query.severity,
-      startDate: req.query.startDate,
-      endDate: req.query.endDate,
+      severity: req.query.severity as string,
+      startDate: req.query.startDate as string,
+      endDate: req.query.endDate as string,
     };
 
     const result = await alertService.getAlertHistory(page, limit, filters);
     res.json(result);
-  } catch (err) {
+  } catch (err: any) {
     res.status(500).json({ message: err.message });
   }
 };
 
-exports.getAlertStats = async (req, res) => {
+export const getAlertStats = async (req: Request, res: Response) => {
   try {
     const stats = await alertService.getAlertStats();
     res.json(stats);
-  } catch (err) {
+  } catch (err: any) {
     res.status(500).json({ message: err.message });
   }
 };
 
-exports.createAlert = async (req, res) => {
+export const createAlert = async (req: Request, res: Response) => {
   try {
     const newAlert = await alertService.createAlert(req.body);
     res.status(201).json(newAlert);
-  } catch (err) {
+  } catch (err: any) {
     res.status(400).json({ message: err.message });
   }
 };
 
-exports.updateAlert = async (req, res) => {
+export const updateAlert = async (req: Request, res: Response) => {
   try {
     const updatedAlert = await alertService.updateAlert(
       req.params.id,
       req.body
     );
     res.json(updatedAlert);
-  } catch (err) {
+  } catch (err: any) {
     res.status(400).json({ message: err.message });
   }
 };
 
-exports.deleteAlert = async (req, res) => {
+export const deleteAlert = async (req: Request, res: Response) => {
   try {
     await alertService.deleteAlert(req.params.id);
     res.json({ message: "Alert deleted" });
-  } catch (err) {
+  } catch (err: any) {
     res.status(500).json({ message: err.message });
   }
 };

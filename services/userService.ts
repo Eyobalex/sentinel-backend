@@ -1,11 +1,17 @@
-const User = require("../models/User");
-const bcrypt = require("bcryptjs");
+import User, { IUser } from "../models/User";
+import bcrypt from "bcryptjs";
 
-exports.getAllUsers = async () => {
+interface UserResponse {
+  id: string;
+  username: string;
+  email: string;
+}
+
+export const getAllUsers = async (): Promise<IUser[]> => {
   return await User.find().select("-password");
 };
 
-exports.createUser = async (userData) => {
+export const createUser = async (userData: any): Promise<UserResponse> => {
   const { username, email, password } = userData;
 
   let user = await User.findOne({ email });
@@ -26,7 +32,7 @@ exports.createUser = async (userData) => {
   return { id: user.id, username: user.username, email: user.email };
 };
 
-exports.deleteUser = async (id) => {
+export const deleteUser = async (id: string): Promise<IUser | null> => {
   const user = await User.findByIdAndDelete(id);
   if (!user) {
     throw new Error("User not found");

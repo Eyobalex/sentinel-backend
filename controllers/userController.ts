@@ -1,30 +1,31 @@
-const userService = require("../services/userService");
+import { Request, Response } from "express";
+import * as userService from "../services/userService";
 
-exports.getAllUsers = async (req, res) => {
+export const getAllUsers = async (req: Request, res: Response) => {
   try {
     const users = await userService.getAllUsers();
     res.json(users);
-  } catch (err) {
+  } catch (err: any) {
     console.error(err.message);
     res.status(500).send("Server error");
   }
 };
 
-exports.createUser = async (req, res) => {
+export const createUser = async (req: Request, res: Response) => {
   try {
     const user = await userService.createUser(req.body);
     res.json(user);
-  } catch (err) {
+  } catch (err: any) {
     console.error(err.message);
     res.status(400).json({ message: err.message });
   }
 };
 
-exports.deleteUser = async (req, res) => {
+export const deleteUser = async (req: Request, res: Response) => {
   try {
     await userService.deleteUser(req.params.id);
     res.json({ message: "User deleted" });
-  } catch (err) {
+  } catch (err: any) {
     console.error(err.message);
     res.status(500).send("Server error");
   }
