@@ -28,7 +28,7 @@ export interface IAlert extends Document {
   ipReputation?: IIpReputation;
   aiAnalysis: IAiAnalysis;
   isRead: boolean;
-  status: "pending" | "resolved" | "unresolvable";
+  assigned: "not_assigned" | "tier_2" | "tier_3";
 }
 
 const alertSchema: Schema = new Schema({
@@ -41,10 +41,10 @@ const alertSchema: Schema = new Schema({
     recommended_action: { type: String },
   },
   isRead: { type: Boolean, default: false },
-  status: {
+  assigned: {
     type: String,
-    enum: ["pending", "resolved", "unresolvable"],
-    default: "pending",
+    enum: ["not_assigned", "tier_2", "tier_3"],
+    default: "not_assigned",
   },
 });
 

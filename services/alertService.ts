@@ -168,13 +168,16 @@ export const performBatchAudit = async (
 };
 
 export const getLatestAlerts = async (): Promise<IAlert[]> => {
-  return await Alert.find().sort({ timestamp: -1 }).limit(10);
+  return await Alert.find({ assigned: "not_assigned" })
+    .sort({ timestamp: -1 })
+    .limit(10);
 };
 
 interface AlertFilters {
   severity?: string;
   startDate?: string;
   endDate?: string;
+  assigned?: string;
 }
 
 interface AlertHistoryResponse {
@@ -191,6 +194,10 @@ export const getAlertHistory = async (
 ): Promise<AlertHistoryResponse> => {
   const skip = (page - 1) * limit;
   const query: any = {};
+
+  if (filters.assigned) {
+    query.assigned = filters.assigned;
+  }
 
   if (filters.severity) {
     query["aiAnalysis.severity"] = filters.severity;
@@ -246,15 +253,10 @@ export const updateAlert = async (id: string, data: any): Promise<IAlert> => {
   const alert = await Alert.findById(id);
   if (!alert) throw new Error("Alert not found");
 
-  if (data.status) {
-    if (alert.status !== "pending") {
+  if (data.assigned) {
+    if (!["tier_2", "tier_3"].includes(data.assigned)) {
       throw new Error(
-        `Cannot change status from ${alert.status} to ${data.status}. Only pending alerts can be modified.`
-      );
-    }
-    if (!["resolved", "unresolvable"].includes(data.status)) {
-      throw new Error(
-        "Invalid status transition. Pending alerts can only be moved to 'resolved' or 'unresolvable'."
+        "Invalid assignment. Can only assign to tier_2 or tier_3."
       );
     }
   }
