@@ -15,45 +15,26 @@ const resend = new Resend(process.env.RESEND_API_KEY);
 
 // --- Helper Functions ---
 
+import fs from "fs";
+import path from "path";
+
 function fetchMockLogs(): IRawLog {
-  const logTypes = [
-    {
+  try {
+    const filePath = path.join(__dirname, "../data/mockLogs.json");
+    const fileContent = fs.readFileSync(filePath, "utf-8");
+    const logTypes: IRawLog[] = JSON.parse(fileContent);
+    return logTypes[Math.floor(Math.random() * logTypes.length)];
+  } catch (error) {
+    console.error("Error reading mock logs:", error);
+    // Fallback log
+    return {
       type: "INFO",
-      message: "User login successful",
-      ip: "192.168.1.5",
-      method: "POST",
-      path: "/login",
-    },
-    {
-      type: "INFO",
-      message: "Page view",
-      ip: "10.0.0.2",
-      method: "GET",
-      path: "/home",
-    },
-    {
-      type: "WARN",
-      message: "Failed login attempt",
-      ip: "45.227.254.10",
-      method: "POST",
-      path: "/login",
-    },
-    {
-      type: "ERROR",
-      message: "SQL Injection attempt detected",
-      ip: "185.220.101.43",
-      method: "GET",
-      path: "/products?id=1 OR 1=1",
-    },
-    {
-      type: "ERROR",
-      message: "Brute force detected",
-      ip: "91.200.12.5",
-      method: "POST",
-      path: "/admin",
-    },
-  ];
-  return logTypes[Math.floor(Math.random() * logTypes.length)];
+      message: "Fallback log - Error reading mock data",
+      ip: "127.0.0.1",
+      method: "SYSTEM",
+      path: "N/A",
+    };
+  }
 }
 
 async function checkIpReputation(ip: string): Promise<IIpReputation> {
