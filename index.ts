@@ -56,10 +56,13 @@ const connectDB = async (retries = 10, delay = 10000) => {
 
 connectDB();
 
+import settingsRoutes from "./routes/settingsRoutes";
+
 // --- Routes ---
 app.use("/api/auth", authRoutes);
 app.use("/api/alerts", alertRoutes);
 app.use("/api/users", userRoutes);
+app.use("/api/settings", settingsRoutes);
 app.use("/api/health", healthRoutes);
 
 // --- Start Server ---

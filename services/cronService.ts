@@ -1,12 +1,20 @@
-import cron from "node-cron";
+import cron, { ScheduledTask } from "node-cron";
 import { performBatchAudit } from "./alertService";
 import Alert from "../models/Alert";
+import { getSettings } from "./settingsService";
 
-export const initCronJobs = () => {
+let cleanupTask: ScheduledTask | null = null;
+let batchAuditTask: ScheduledTask | null = null;
+
+export const initCronJobs = async () => {
   console.log("Initializing Cron Jobs...");
 
-  // Schedule Batch Audit every 3 hours
-  cron.schedule("0 * * * *", async () => {
+  const settings = await getSettings();
+
+  // Schedule Batch Audit based on settings
+  const auditSchedule = settings.batchAuditSchedule || "0 */3 * * *"; // Default to every 3 hours
+
+  batchAuditTask = cron.schedule(auditSchedule, async () => {
     console.log("Running Scheduled Batch Audit...");
     try {
       await performBatchAudit(5);
@@ -16,8 +24,10 @@ export const initCronJobs = () => {
     }
   });
 
-  // Schedule Cleanup of Medium Alerts every hour
-  cron.schedule("0 * * * *", async () => {
+  // Schedule Cleanup of Medium Alerts based on settings
+  const cleanupSchedule = settings.cleanupSchedule || "0 * * * *"; // Default to hourly
+
+  cleanupTask = cron.schedule(cleanupSchedule, async () => {
     console.log("Running Cleanup of Medium Alerts...");
     try {
       const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
@@ -38,6 +48,18 @@ export const initCronJobs = () => {
   });
 
   console.log(
-    "Cron Jobs scheduled: Batch Audit (Every 3 hours), Cleanup Medium Alerts (Every hour)"
+    `Cron Jobs scheduled: Batch Audit (${auditSchedule}), Cleanup Medium Alerts (${cleanupSchedule})`
   );
+};
+
+export const restartCronJobs = () => {
+  if (cleanupTask) {
+    cleanupTask.stop();
+    console.log("Stopped existing cleanup task.");
+  }
+  if (batchAuditTask) {
+    batchAuditTask.stop();
+    console.log("Stopped existing batch audit task.");
+  }
+  initCronJobs();
 };

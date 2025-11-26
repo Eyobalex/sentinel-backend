@@ -41,6 +41,10 @@ Content-Type: {{contentType}}
 GET {{baseUrl}}/alerts/latest
 Content-Type: {{contentType}}
 
+### Get Health (Public)
+GET {{baseUrl}}/health
+Content-Type: {{contentType}}
+
 ### Get Alert History (Paginated)
 GET {{baseUrl}}/alerts/history?page=1&limit=5
 Content-Type: {{contentType}}

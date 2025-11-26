@@ -4,6 +4,7 @@ import Alert, {
   IIpReputation,
   IAiAnalysis,
 } from "../models/Alert";
+import { getSettings } from "./settingsService";
 import axios from "axios";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { Resend } from "resend";
@@ -112,9 +113,10 @@ async function analyzeWithGemini(
 
 async function sendEmailAlert(alertData: IAlert) {
   try {
+    const settings = await getSettings();
     const { data, error } = await resend.emails.send({
       from: process.env.ALERT_EMAIL_FROM || "",
-      to: [process.env.ALERT_EMAIL_TO || ""],
+      to: [settings.alertEmail || process.env.ALERT_EMAIL_TO || ""],
       subject: `[Sentinel] High Severity Threat Detected: ${alertData.aiAnalysis.summary}`,
       html: `
         <h1>High Severity Threat Detected!</h1>
